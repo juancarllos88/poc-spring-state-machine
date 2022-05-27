@@ -2,14 +2,17 @@ package com.statemachine.demo.entity;
 
 import com.statemachine.demo.CartState;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.statemachine.demo.CartState.EMPTY;
@@ -22,7 +25,7 @@ public class Cart {
     @GeneratedValue
     private Long id;
 
-    @OneToMany
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, fetch = FetchType.EAGER)
     @JoinColumn(name = "cart_id")
     private List<CartItem> itens;
 
@@ -34,6 +37,15 @@ public class Cart {
 
     @Column(name = "shipping_price")
     private Double shippingPrice;
+
+    public void addNewItem(CartItem cartItem) {
+
+        if (itens == null) {
+            itens = new ArrayList<>();
+        }
+
+        itens.add(cartItem);
+    }
 
     public boolean isEmpty() {
         return itens.isEmpty();

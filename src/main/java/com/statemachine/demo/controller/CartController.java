@@ -30,9 +30,11 @@ public class CartController {
         AddCartItem command = dto.toCommand();
 
         repository.findById(command.getProductId())
-            .ifPresent(cart -> stateMachine.getExtendedState().getVariables().put("cart", cart));
+            .ifPresent(cart -> {
+                stateMachine.getExtendedState().getVariables().put("cart", cart);
+                stateMachine.getExtendedState().getVariables().put("newItem", command);
+            });
         stateMachine.sendEvent(CartCommandType.ADD_ITEM);
-        System.out.println(stateMachine.getState());
     }
 
     @DeleteMapping

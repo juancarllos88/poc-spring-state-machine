@@ -17,6 +17,7 @@ import static com.statemachine.demo.CartState.CHECKED_OUT;
 import static com.statemachine.demo.CartState.EMPTY;
 import static com.statemachine.demo.CartState.ADD_TO_CART_CHOICE;
 import static com.statemachine.demo.CartState.READY_FOR_CHECKOUT;
+import static com.statemachine.demo.CartState.SHIPPIND_CALCULATION_FAILED;
 import static com.statemachine.demo.statemachine.CartCommandType.ADD_ITEM;
 
 @Component
@@ -30,6 +31,9 @@ public class SimpleStateMachineConfiguration extends StateMachineConfigurerAdapt
 
     @Autowired
     private AddItemGuard addItemGuard;
+
+    @Autowired
+    private AddNewAddToCartAction addNewAddToCartAction;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<CartState, CartCommandType> config) throws Exception {
@@ -45,6 +49,7 @@ public class SimpleStateMachineConfiguration extends StateMachineConfigurerAdapt
                 .initial(EMPTY)
                 .end(CHECKED_OUT)
                 .choice(ADD_TO_CART_CHOICE)
+                .stateDo(READY_FOR_CHECKOUT, addNewAddToCartAction)
                 .states(CartState.getIntermediaryStates());
     }
 
@@ -57,11 +62,11 @@ public class SimpleStateMachineConfiguration extends StateMachineConfigurerAdapt
             .withChoice()
                 .source(ADD_TO_CART_CHOICE)
                 .first(READY_FOR_CHECKOUT, addItemGuard)
-                .last(EMPTY);
+                .last(SHIPPIND_CALCULATION_FAILED);
     }
 
     @Bean
-    public Action<CartState, CartCommandType> initAction() {
+    public Action<CartState, CartCommandType> addNewAddToCartAndSave() {
         return ctx -> {
             LOG.info("Init Action = Target ID: {}", ctx.getTarget().getId());
 
