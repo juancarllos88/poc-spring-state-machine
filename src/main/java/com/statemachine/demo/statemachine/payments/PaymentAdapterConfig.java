@@ -1,37 +1,51 @@
 package com.statemachine.demo.statemachine.payments;
 
 import com.statemachine.demo.statemachine.StateMachineListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
-import org.springframework.stereotype.Component;
 
 import java.util.Random;
 
-import static com.statemachine.demo.statemachine.payments.PaymentCommandType.TO_PAY;
-import static com.statemachine.demo.statemachine.payments.PaymentState.CHECK_LIMIT_IN_ANALYSIS;
-import static com.statemachine.demo.statemachine.payments.PaymentState.CREDIT_CARD_APPROVED;
+import static com.statemachine.demo.statemachine.payments.PaymentCommandType.EXECUTE_PAYMENT;
+import static com.statemachine.demo.statemachine.payments.PaymentCommandType.FINISH_CREDIT_CARD_ANALYSIS;
+import static com.statemachine.demo.statemachine.payments.PaymentCommandType.FINISH_SERASA_ANALYSIS;
+import static com.statemachine.demo.statemachine.payments.PaymentCommandType.FRAUD_DETECTED;
+import static com.statemachine.demo.statemachine.payments.PaymentCommandType.START_PAYMENT;
+import static com.statemachine.demo.statemachine.payments.PaymentState.ANALYSIS_FINISHED;
+import static com.statemachine.demo.statemachine.payments.PaymentState.AUTHORIZED;
+import static com.statemachine.demo.statemachine.payments.PaymentState.CREDIT_ANALYSIS_FINISHED;
 import static com.statemachine.demo.statemachine.payments.PaymentState.CREDIT_CARD_IN_ANALYSIS;
-import static com.statemachine.demo.statemachine.payments.PaymentState.CREDIT_CARD_REPPROVED;
 import static com.statemachine.demo.statemachine.payments.PaymentState.IN_ANALYSIS;
-import static com.statemachine.demo.statemachine.payments.PaymentState.JOIN_ANALYSIS;
-import static com.statemachine.demo.statemachine.payments.PaymentState.SERASA_APPROVED;
+import static com.statemachine.demo.statemachine.payments.PaymentState.JOIN_ALL_ANALYSIS;
+import static com.statemachine.demo.statemachine.payments.PaymentState.NOT_AUTHORIZED;
+import static com.statemachine.demo.statemachine.payments.PaymentState.REJECTED_BY_FRAUD;
+import static com.statemachine.demo.statemachine.payments.PaymentState.SERASA_ANALYSIS_FINISHED;
 import static com.statemachine.demo.statemachine.payments.PaymentState.SERASA_IN_ANALYSIS;
-import static com.statemachine.demo.statemachine.payments.PaymentState.SERASA_REPPROVED;
 import static com.statemachine.demo.statemachine.payments.PaymentState.STARTED;
+import static com.statemachine.demo.statemachine.payments.PaymentState.TRY_TO_PAY;
 
-@Component
+@Configuration
 @EnableStateMachine
 public class PaymentAdapterConfig extends StateMachineConfigurerAdapter<PaymentState, PaymentCommandType> {
+
+    private static Logger LOG = LoggerFactory.getLogger(PaymentAdapterConfig.class);
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<PaymentState, PaymentCommandType> config) throws Exception {
         config.withConfiguration()
                 .listener(new StateMachineListener())
+//                .taskExecutor(taskExecutor())
                 .autoStartup(true);
     }
 
@@ -39,45 +53,125 @@ public class PaymentAdapterConfig extends StateMachineConfigurerAdapter<PaymentS
     public void configure(StateMachineStateConfigurer<PaymentState, PaymentCommandType> states) throws Exception {
         states.withStates()
             .initial(STARTED)
-            .end(PaymentState.FINISHED)
             .fork(IN_ANALYSIS)
-            .join(JOIN_ANALYSIS)
-            .states(PaymentState.listIntermediaryStates())
+            .join(JOIN_ALL_ANALYSIS)
+            .choice(TRY_TO_PAY)
+            .state(ANALYSIS_FINISHED, checkFraud())
+            .end(REJECTED_BY_FRAUD)
+            .end(AUTHORIZED)
+            .end(NOT_AUTHORIZED)
             .and()
             .withStates()
                 .parent(IN_ANALYSIS)
                 .initial(SERASA_IN_ANALYSIS)
-                .end(SERASA_APPROVED)
-                .end(SERASA_REPPROVED)
-            .and()
+                .state(SERASA_IN_ANALYSIS, executeSerasaAnalysis())
+                .stateDo(SERASA_ANALYSIS_FINISHED, saveSerasaAnalysis())
+                .end(SERASA_ANALYSIS_FINISHED)
+                .and()
             .withStates()
                 .parent(IN_ANALYSIS)
                 .initial(CREDIT_CARD_IN_ANALYSIS)
-                .end(CREDIT_CARD_APPROVED)
-                .end(CREDIT_CARD_REPPROVED);
+                .state(CREDIT_CARD_IN_ANALYSIS, executeCreditCardAnalysis())
+                .stateDo(CREDIT_ANALYSIS_FINISHED, saveCreditCardAnalysis())
+                .end(CREDIT_ANALYSIS_FINISHED);
     }
 
     @Override
     public void configure(StateMachineTransitionConfigurer<PaymentState, PaymentCommandType> transitions) throws Exception {
         transitions.withExternal()
-            .source(STARTED).target(IN_ANALYSIS).event(TO_PAY)
+            .source(STARTED).target(IN_ANALYSIS).event(START_PAYMENT)
         .and()
-        .withFork()
+           .withExternal()
+           .source(SERASA_IN_ANALYSIS).target(SERASA_ANALYSIS_FINISHED).event(FINISH_SERASA_ANALYSIS)
+        .and()
+           .withExternal()
+           .source(CREDIT_CARD_IN_ANALYSIS).target(CREDIT_ANALYSIS_FINISHED).event(FINISH_CREDIT_CARD_ANALYSIS)
+        .and().withExternal()
+            .source(JOIN_ALL_ANALYSIS).target(ANALYSIS_FINISHED)
+        .and().withExternal()
+            .source(ANALYSIS_FINISHED).target(TRY_TO_PAY).event(EXECUTE_PAYMENT)
+        .and()
+            .withExternal().source(ANALYSIS_FINISHED).target(REJECTED_BY_FRAUD).event(FRAUD_DETECTED)
+        .and()
+            .withFork()
             .source(IN_ANALYSIS)
             .target(SERASA_IN_ANALYSIS)
             .target(CREDIT_CARD_IN_ANALYSIS)
         .and()
-        .withExternal()
-                .
-
-//            .withChoice()
-//            .source(IN_ANALYSIS)
-//            .first(PaymentState.FRAUD, fraudCheckerGuard())
-//            .last(PaymentState.WITHOUT_FRAUD);
+            .withJoin()
+            .source(SERASA_ANALYSIS_FINISHED)
+            .source(CREDIT_ANALYSIS_FINISHED)
+            .target(JOIN_ALL_ANALYSIS)
+        .and()
+            .withChoice()
+            .source(TRY_TO_PAY)
+            .then(AUTHORIZED, executePayment())
+            .last(NOT_AUTHORIZED);
     }
 
     @Bean
-    public Guard<PaymentState, PaymentCommandType> fraudCheckerGuard() {
-        return ctx -> new Random().nextBoolean();
+    public Action<PaymentState, PaymentCommandType> checkFraud() {
+        return ctx -> {
+
+            try {
+
+                LOG.info("=================== > Detecting Possible Frauds... < ===============================");
+
+                Boolean serasaApproved = ctx.getExtendedState().get("SerasaApproved", Boolean.class);
+                Boolean creditCardApproved = ctx.getExtendedState().get("CreditCardApproved", Boolean.class);
+
+                LOG.info("Serasa Approved: {}", serasaApproved);
+                LOG.info("Credit Card Approved: {}", creditCardApproved);
+
+                if (!serasaApproved || !creditCardApproved) {
+                    ctx.getStateMachine().sendEvent(FRAUD_DETECTED);
+                }
+
+            } catch (Exception e) {
+                LOG.error(e.getMessage());
+            }
+        };
+    }
+
+    @Bean
+    public Guard<PaymentState, PaymentCommandType> executePayment() {
+        return ctx -> {
+            LOG.info("=================== > Executing Payment... < ===============================");
+
+            return new Random().nextBoolean();
+        };
+    }
+
+    @Bean
+    public TaskExecutor taskExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(10);
+        return taskExecutor;
+    }
+
+    @Bean
+    public Action<PaymentState, PaymentCommandType> executeSerasaAnalysis() {
+        return ctx -> LOG.info("=================== > Executing Serasa Analysis... < ===============================");
+    }
+
+    @Bean
+    public Action<PaymentState, PaymentCommandType> saveSerasaAnalysis() {
+        return ctx -> {
+            LOG.info("=================== > Saving Serasa Analysis... < =================================");
+            ctx.getExtendedState().getVariables().put("SerasaApproved",  new Random().nextBoolean());
+        };
+    }
+
+    @Bean
+    public Action<PaymentState, PaymentCommandType> executeCreditCardAnalysis() {
+        return ctx -> LOG.info("=================== > Executing CreditCard Analysis... < =============================");
+    }
+
+    @Bean
+    public Action<PaymentState, PaymentCommandType> saveCreditCardAnalysis() {
+        return ctx -> {
+            LOG.info("=================== > Saving Credit Card Analysis... < =================================");
+            ctx.getExtendedState().getVariables().put("CreditCardApproved",  new Random().nextBoolean());
+        };
     }
 }
