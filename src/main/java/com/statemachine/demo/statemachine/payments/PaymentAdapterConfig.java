@@ -114,7 +114,6 @@ public class PaymentAdapterConfig extends StateMachineConfigurerAdapter<PaymentS
         return ctx -> {
 
             try {
-
                 LOG.info("=================== > Detecting Possible Frauds... < ===============================");
 
                 Boolean serasaApproved = ctx.getExtendedState().get("SerasaApproved", Boolean.class);
@@ -123,9 +122,11 @@ public class PaymentAdapterConfig extends StateMachineConfigurerAdapter<PaymentS
                 LOG.info("Serasa Approved: {}", serasaApproved);
                 LOG.info("Credit Card Approved: {}", creditCardApproved);
 
-                if (!serasaApproved || !creditCardApproved) {
-                    ctx.getStateMachine().sendEvent(FRAUD_DETECTED);
-                }
+//                if (!serasaApproved || !creditCardApproved) {
+//                    ctx.getStateMachine().sendEvent(FRAUD_DETECTED);
+//                } else {
+                    ctx.getStateMachine().sendEvent(EXECUTE_PAYMENT);
+//                }
 
             } catch (Exception e) {
                 LOG.error(e.getMessage());
@@ -137,8 +138,12 @@ public class PaymentAdapterConfig extends StateMachineConfigurerAdapter<PaymentS
     public Guard<PaymentState, PaymentCommandType> executePayment() {
         return ctx -> {
             LOG.info("=================== > Executing Payment... < ===============================");
+            var result = new Random().nextBoolean();
+            LOG.info("=================== > Is Payment Authorized? {} < ===============================", result);
 
-            return new Random().nextBoolean();
+//            return result;
+
+            return true;
         };
     }
 
