@@ -54,8 +54,6 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
 
     @Autowired
     private PaymentAnalysisRepository paymentAnalysisRepository;
-    @Autowired
-    private Teste teste;
 
     @Override
     public void configure(StateMachineConfigurationConfigurer<PaymentState, PaymentCommandType> config) throws Exception {
