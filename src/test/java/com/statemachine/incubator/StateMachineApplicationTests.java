@@ -1,10 +1,10 @@
-package com.statemachine.demo;
+package com.statemachine.incubator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class StateMachineApplicationTests {
 
 	@Test
 	void contextLoads() {
