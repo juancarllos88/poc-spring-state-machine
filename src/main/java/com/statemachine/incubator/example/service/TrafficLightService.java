@@ -7,8 +7,12 @@ import com.statemachine.incubator.example.state_machine.TrafficLightMachineFacto
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 @Service
 public class TrafficLightService {
@@ -34,6 +38,9 @@ public class TrafficLightService {
     public TrafficLight execute(Long paymentId, TrafficLightCommandType command) {
         var stateMachine = factory.createStateMachineBasedOn(paymentId);
         stateMachine.sendEvent(command);
+
+        var eventErrorMessage = stateMachine.getExtendedState().get("eventErrorMessage", String.class);
+        Assert.state(eventErrorMessage == null, eventErrorMessage);
 
         return stateMachine.getExtendedState().get("trafficLight", TrafficLight.class);
     }

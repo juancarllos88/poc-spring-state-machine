@@ -21,7 +21,7 @@ public class StateMachineListener {
 
     /**
      * 2 formas diferentes de fazer:
-     * - A primeira (syncronizeStateMachineWithEntity) faz o sync da status machine com a entity e já grava no BD
+     * - A primeira (syncronizeStateMachineWithEntityInTheDatabase) faz o sync da status machine com a entity e já grava no BD
      * - A segunda (syncronizeStateMachineWithEntity) apenas faz o sync da status machine com a entity, porém deixa para o service persistir
      */
 
@@ -47,6 +47,7 @@ public class StateMachineListener {
 
     @OnEventNotAccepted
     public void eventNotAccepted(StateContext context) {
-        LOG.warn("Event not accepted -> {} for current state {}", context.getEvent(), context.getStateMachine().getState().getId());
+        String messageError = String.format("Event (%s) not accepted for current state (%s)", context.getEvent(), context.getStateMachine().getState().getId());
+        context.getExtendedState().getVariables().put("eventErrorMessage", messageError);
     }
 }
