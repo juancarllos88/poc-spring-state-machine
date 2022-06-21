@@ -1,7 +1,6 @@
 package com.statemachine.incubator.example.controller;
 
 import com.statemachine.incubator.example.service.TrafficLightService;
-import com.statemachine.incubator.example.state_machine.TrafficLightCommandType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +30,14 @@ public class TrafficLightController {
     }
 
     @PatchMapping("/{trafficLightId}/statuses")
-    public ResponseEntity<OutputTrafficLightDto> sendEvent(@PathVariable Long trafficLightId, @RequestBody InputCommandDto dto) {
-        var trafficLight = trafficLightService.changeTrafficLightStatus(trafficLightId, dto.command());
+    public ResponseEntity<OutputTrafficLightDto> executeCommand(@PathVariable Long trafficLightId, @RequestBody InputCommandDto dto) {
+        var trafficLight = trafficLightService.execute(trafficLightId, dto.command());
 
         return ResponseEntity.ok(OutputTrafficLightDto.from(trafficLight));
     }
 
     @GetMapping("/{trafficLightId}")
-    public ResponseEntity<OutputTrafficLightDto> get(@PathVariable Long trafficLightId) {
+    public ResponseEntity<OutputTrafficLightDto> findBy(@PathVariable Long trafficLightId) {
         return trafficLightService.findBy(trafficLightId)
                 .map(trafficLight -> ResponseEntity.ok(OutputTrafficLightDto.from(trafficLight)))
                 .orElseGet(() -> ResponseEntity.notFound().build());

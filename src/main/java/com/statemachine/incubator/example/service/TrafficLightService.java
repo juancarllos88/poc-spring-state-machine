@@ -31,9 +31,9 @@ public class TrafficLightService {
     }
 
     @Transactional
-    public TrafficLight changeTrafficLightStatus(Long paymentId, TrafficLightCommandType trafficLightCommandType) {
+    public TrafficLight execute(Long paymentId, TrafficLightCommandType command) {
         var stateMachine = factory.createStateMachineBasedOn(paymentId);
-        stateMachine.sendEvent(trafficLightCommandType);
+        stateMachine.sendEvent(command);
 
         return stateMachine.getExtendedState().get("trafficLight", TrafficLight.class);
     }
