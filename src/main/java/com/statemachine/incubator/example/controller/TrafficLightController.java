@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/traffic-lights/api")
+@RequestMapping("/api/traffic-lights")
 public class TrafficLightController {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(TrafficLightController.class);
