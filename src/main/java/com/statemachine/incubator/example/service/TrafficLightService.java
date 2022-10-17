@@ -2,7 +2,7 @@ package com.statemachine.incubator.example.service;
 
 import com.statemachine.incubator.example.entity.TrafficLight;
 import com.statemachine.incubator.example.repository.TrafficLightRepository;
-import com.statemachine.incubator.example.state_machine.TrafficLightCommandType;
+import com.statemachine.incubator.example.state_machine.PaymentEvents;
 import com.statemachine.incubator.example.state_machine.TrafficLightMachineFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ public class TrafficLightService {
     }
 
     @Transactional
-    public TrafficLight execute(Long paymentId, TrafficLightCommandType command) {
+    public TrafficLight execute(Long paymentId, PaymentEvents command) {
         var stateMachine = factory.createStateMachineBasedOn(paymentId);
         stateMachine.sendEvent(command);
 

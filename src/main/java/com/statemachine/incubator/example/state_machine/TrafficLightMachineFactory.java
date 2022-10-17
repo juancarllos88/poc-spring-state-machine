@@ -17,12 +17,12 @@ import java.util.Map;
 public class TrafficLightMachineFactory {
 
     @Autowired
-    private StateMachineFactory<TrafficStatus, TrafficLightCommandType> stateMachineFactory;
+    private StateMachineFactory<TrafficStatus, PaymentEvents> stateMachineFactory;
 
     @Autowired
     private TrafficLightRepository repository;
 
-    public StateMachine<TrafficStatus, TrafficLightCommandType> createStateMachineBasedOn(Long trafficLightId) {
+    public StateMachine<TrafficStatus, PaymentEvents> createStateMachineBasedOn(Long trafficLightId) {
 
         if (trafficLightId == null) {
             throw new IllegalArgumentException("O trafficLightId can NOT be null!");
@@ -35,7 +35,7 @@ public class TrafficLightMachineFactory {
                 .orElseThrow(()-> new IllegalArgumentException("Traffic Light not found -> " + trafficLightId));
 
         stateMachine.getStateMachineAccessor().doWithAllRegions(sma -> {
-            StateMachineContext<TrafficStatus, TrafficLightCommandType> stateMachineContext = new DefaultStateMachineContext<>(trafficLight.getStatus(), null, null, new DefaultExtendedState(Map.of("trafficLight", trafficLight)), null, stateMachine.getId());
+            StateMachineContext<TrafficStatus, PaymentEvents> stateMachineContext = new DefaultStateMachineContext<>(trafficLight.getStatus(), null, null, new DefaultExtendedState(Map.of("trafficLight", trafficLight)), null, stateMachine.getId());
             sma.resetStateMachine(stateMachineContext);
         });
 
@@ -44,7 +44,7 @@ public class TrafficLightMachineFactory {
         return stateMachine;
     }
 
-    public StateMachine<TrafficStatus, TrafficLightCommandType> createStateMachineWith(TrafficLight trafficLight) {
+    public StateMachine<TrafficStatus, PaymentEvents> createStateMachineWith(TrafficLight trafficLight) {
         var stateMachine = stateMachineFactory.getStateMachine();
 
         stateMachine.getExtendedState().getVariables().put("trafficLight", trafficLight);

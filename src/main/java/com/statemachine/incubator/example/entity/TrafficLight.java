@@ -1,6 +1,6 @@
 package com.statemachine.incubator.example.entity;
 
-import com.statemachine.incubator.example.state_machine.TrafficLightCommandType;
+import com.statemachine.incubator.example.state_machine.PaymentEvents;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.statemachine.StateMachine;
 
@@ -49,7 +49,7 @@ public class TrafficLight {
         this.status = TrafficStatus.TURNED_ON;
     }
 
-    public void changeStateBasedOn(StateMachine<TrafficStatus, TrafficLightCommandType> stateMachine) {
+    public void changeStateBasedOn(StateMachine<TrafficStatus, PaymentEvents> stateMachine) {
         this.status = stateMachine.getState().getId();
     }
 

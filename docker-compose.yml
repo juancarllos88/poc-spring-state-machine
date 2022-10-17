@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+
+  mysql-payments:
+    container_name: mysql-payments
+    image: mysql
+    volumes:
+      - mysql-payments:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: payments
+      MYSQL_USER: payments
+      MYSQL_PASSWORD: payments
+
+  rabbitmq-payments:
+    container_name: rabbitmq-payments
+    image: 'rabbitmq:3-management'
+    volumes:
+      - rabbitmq-payments:/var/lib/rabbitmq/
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=payments
+      - RABBITMQ_DEFAULT_PASS=payments
+
+volumes:
+  mysql-payments:
+  rabbitmq-payments:

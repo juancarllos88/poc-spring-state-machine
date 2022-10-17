@@ -1,0 +1,38 @@
+# database configs
+spring:
+  datasource:
+    url: "jdbc:mysql://172.240.0.2:3306/payment?useTimezone=true&serverTimezone=America/Sao_Paulo"
+    url: "jdbc:mysql://localhost:3306/traffic-light-db?useTimezone=true&serverTimezone=America/Sao_Paulo"
+    username: root
+    password: root
+    driverClassName: com.mysql.jdbc.Driver
+    testWhileIdle: true
+    validationQuery: SELECT 1
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  rabbitmq:
+    host: 172.240.0.3
+    port: 5672
+    username: guest
+    password: guest
+server:
+  servlet:
+    context-path: /incubator-state-machine
+queue:
+  name:
+    email: email
+    fraud: fraud
+    error: error
+rabbit:
+  exchange: state-machine
+  routing:
+    key:
+      email: state_machine_routing_key_email
+      fraud: state_machine_routing_key_fraud
+      error: state_machine_routing_key_error

@@ -22,28 +22,28 @@ import static com.statemachine.incubator.example.entity.TrafficLight.TrafficStat
 import static com.statemachine.incubator.example.entity.TrafficLight.TrafficStatus.TURNED_ON;
 import static com.statemachine.incubator.example.entity.TrafficLight.TrafficStatus.YELLOW;
 import static com.statemachine.incubator.example.entity.TrafficLight.TrafficStatus.values;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.CHANGE_TO_GREEN;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.CHANGE_TO_RED;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.CHANGE_TO_YELLOW;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.OUT_OF_SERVICE;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.START_SERVICE;
-import static com.statemachine.incubator.example.state_machine.TrafficLightCommandType.TURN_OFF;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.CHANGE_TO_GREEN;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.CHANGE_TO_RED;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.CHANGE_TO_YELLOW;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.OUT_OF_SERVICE;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.START_SERVICE;
+import static com.statemachine.incubator.example.state_machine.PaymentEvents.TURN_OFF;
 
 @Configuration
 @EnableStateMachineFactory(contextEvents = false)
-public class TrafficLightAdapterConfig extends EnumStateMachineConfigurerAdapter<TrafficStatus, TrafficLightCommandType> {
+public class TrafficLightAdapterConfig extends EnumStateMachineConfigurerAdapter<TrafficStatus, PaymentEvents> {
 
     private static Logger LOG = LoggerFactory.getLogger(TrafficLightAdapterConfig.class);
 
     @Override
-    public void configure(StateMachineConfigurationConfigurer<TrafficStatus, TrafficLightCommandType> config) throws Exception {
+    public void configure(StateMachineConfigurationConfigurer<TrafficStatus, PaymentEvents> config) throws Exception {
         config.withConfiguration()
             .machineId("trafficLightListenner")
             .autoStartup(true);
     }
 
     @Override
-    public void configure(StateMachineStateConfigurer<TrafficStatus, TrafficLightCommandType> states) throws Exception {
+    public void configure(StateMachineStateConfigurer<TrafficStatus, PaymentEvents> states) throws Exception {
         states.withStates()
             .initial(TURNED_ON)
             .stateDo(TURNED_ON, initializeTrafficLight())
@@ -52,7 +52,7 @@ public class TrafficLightAdapterConfig extends EnumStateMachineConfigurerAdapter
     }
 
     @Override
-    public void configure(StateMachineTransitionConfigurer<TrafficStatus, TrafficLightCommandType> transitions) throws Exception {
+    public void configure(StateMachineTransitionConfigurer<TrafficStatus, PaymentEvents> transitions) throws Exception {
         transitions.withExternal()
             .source(TURNED_ON).target(FLASHING_YELLOW).event(START_SERVICE)
         .and()
@@ -76,7 +76,7 @@ public class TrafficLightAdapterConfig extends EnumStateMachineConfigurerAdapter
     }
 
     @Bean
-    Action<TrafficStatus, TrafficLightCommandType> initializeTrafficLight() {
+    Action<TrafficStatus, PaymentEvents> initializeTrafficLight() {
         return ctx -> {
             LOG.info("=================== > Initializing Traffic Light... < ===============================");
 
