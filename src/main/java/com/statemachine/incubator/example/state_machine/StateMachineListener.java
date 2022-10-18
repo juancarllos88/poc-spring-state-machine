@@ -45,7 +45,7 @@ public class StateMachineListener {
 
     @OnTransitionEnd(target = {"IN_ANALYSIS","REJECTED_BY_FRAUD","AUTHORIZED", "CHECKING_AUTHORIZATION","NOT_AUTHORIZED"})
     public void syncronizeStateMachineWithEntity(StateContext<PaymentStates, PaymentEvents> context) {
-
+        LOG.info(String.format("Listener OnTransitionEnd %s", context.getStateMachine().getState().getId()));
         var paymentFromStateMachine = context.getExtendedState().get("payment", Payment.class);
 
         if (Objects.nonNull(paymentFromStateMachine)) {
@@ -64,6 +64,7 @@ public class StateMachineListener {
 
     @OnTransitionStart(target = {"IN_ANALYSIS"})
     public void analyzingPayment(StateContext<PaymentStates, PaymentEvents> context) {
+        LOG.info(String.format("Listener OnTransitionStart %s", context.getStateMachine().getState().getId()));
         Boolean analysis = new Random().nextBoolean();
         context.getStateMachine()
                 .getExtendedState()
@@ -73,6 +74,7 @@ public class StateMachineListener {
 
     @OnEventNotAccepted
     public void eventNotAccepted(StateContext<PaymentStates, PaymentEvents> context) {
+        LOG.info(String.format("Listener OnEventNotAccepted %s", context.getStateMachine().getState().getId()));
         String messageError = String.format("Event (%s) not accepted for current state (%s)",
                 context.getEvent(),
                 context.getStateMachine().getState().getId().name());

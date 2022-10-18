@@ -47,6 +47,6 @@ public class PaymentService {
         var eventErrorMessage = stateMachine.getExtendedState().get("eventErrorMessage", String.class);
         Assert.state(eventErrorMessage == null, eventErrorMessage);
 
-        return stateMachine.getExtendedState().get("trafficLight", TrafficLight.class);
+        return stateMachine.getExtendedState().get("payment", Payment.class);
     }
 }
