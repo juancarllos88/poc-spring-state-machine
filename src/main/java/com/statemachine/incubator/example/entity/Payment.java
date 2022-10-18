@@ -21,7 +21,7 @@ public class Payment {
 
     @Enumerated(STRING)
     @Column(nullable = false)
-    private PaymentStates status;
+    private PaymentStates state;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -34,7 +34,7 @@ public class Payment {
     public Payment(Long id, BigDecimal amount) {
         this.id = id;
         this.amount = amount;
-        this.status = PaymentStates.PAYMENT_STARTED;
+        this.state = PaymentStates.PAYMENT_STARTED;
     }
 
     public Payment() {
@@ -42,6 +42,39 @@ public class Payment {
     }
 
     public void changeStateBasedOn(StateMachine<PaymentStates, PaymentEvents> stateMachine) {
-        this.status = stateMachine.getState().getId();
+        this.state = stateMachine.getState().getId();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public Instant getCreatedPayDay() {
+        return createdPayDay;
+    }
+
+    public void setCreatedPayDay(Instant createdPayDay) {
+        this.createdPayDay = createdPayDay;
+    }
+
+    public PaymentStates getState() {
+        return state;
+    }
+
+    public void setState(PaymentStates state) {
+        this.state = state;
     }
 }

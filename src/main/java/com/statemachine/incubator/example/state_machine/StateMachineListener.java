@@ -1,23 +1,31 @@
 package com.statemachine.incubator.example.state_machine;
 
+import com.statemachine.incubator.example.entity.Payment;
+import com.statemachine.incubator.example.entity.PaymentStates;
 import com.statemachine.incubator.example.entity.TrafficLight;
-import com.statemachine.incubator.example.repository.TrafficLightRepository;
+import com.statemachine.incubator.example.repository.PaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.annotation.OnEventNotAccepted;
-import org.springframework.statemachine.annotation.OnStateChanged;
-import org.springframework.statemachine.annotation.OnTransitionEnd;
-import org.springframework.statemachine.annotation.WithStateMachine;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.annotation.*;
 
-@WithStateMachine(id = "trafficLightListenner")
+import java.util.Objects;
+import java.util.Random;
+
+@WithStateMachine(id = "paymentListenner")
 public class StateMachineListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(StateMachineListener.class);
 
+    /*
+    private final PaymentRepository repository;
     @Autowired
-    private TrafficLightRepository repository;
+    public StateMachineListener(PaymentRepository repository) {
+        this.repository = repository;
+    }
+    */
 
     /**
      * 2 formas diferentes de fazer:
@@ -25,6 +33,7 @@ public class StateMachineListener {
      * - A segunda (syncronizeStateMachineWithEntity) apenas faz o sync da status machine com a entity, porém deixa para o service persistir
      */
 
+   /*
     @OnTransitionEnd(source = {"FLASHING_YELLOW", "RED", "YELLOW", "GREEN", "TURNED_OFF"})
     public void syncronizeStateMachineWithEntityInTheDatabase(StateContext context) {
         TrafficLight trafficLightFromStateMachine = context.getExtendedState().get("trafficLight", TrafficLight.class);
@@ -32,22 +41,44 @@ public class StateMachineListener {
         var trafficLightFromDatabase = repository.save(trafficLightFromStateMachine);
         context.getExtendedState().getVariables().put("trafficLight", trafficLightFromDatabase);
     }
+    */
 
-    @OnStateChanged(source = "TURNED_ON", target = "FLASHING_YELLOW")
-    public void syncronizeStateMachineWithEntity(StateContext context) {
-        LOG.info("State Changed from TURNED_ON to FLASHING_YELLOW");
+    @OnTransitionEnd(target = {"IN_ANALYSIS","REJECTED_BY_FRAUD","AUTHORIZED", "CHECKING_AUTHORIZATION","NOT_AUTHORIZED"})
+    public void syncronizeStateMachineWithEntity(StateContext<PaymentStates, PaymentEvents> context) {
 
-        TrafficLight trafficLightFromStateMachine = context.getExtendedState().get("trafficLight", TrafficLight.class);
+        var paymentFromStateMachine = context.getExtendedState().get("payment", Payment.class);
 
-        if (trafficLightFromStateMachine != null) {
-            trafficLightFromStateMachine.changeStateBasedOn(context.getStateMachine());
-            context.getExtendedState().getVariables().put("trafficLight", trafficLightFromStateMachine);
+        if (Objects.nonNull(paymentFromStateMachine)) {
+
+            paymentFromStateMachine.changeStateBasedOn(context.getStateMachine());
+
+            context.getExtendedState()
+                    .getVariables()
+                    .put("payment", paymentFromStateMachine);
         }
+    }
+    @OnStateChanged()
+    public void stateChanged(StateMachine<PaymentStates, PaymentEvents> from, StateMachine<PaymentStates, PaymentEvents> to) {
+        LOG.info(String.format("State Changed from %s to %s", from.getState().getId(), from.getState().getId()));
+    }
+
+    @OnTransitionStart(target = {"IN_ANALYSIS"})
+    public void analyzingPayment(StateContext<PaymentStates, PaymentEvents> context) {
+        Boolean analysis = new Random().nextBoolean();
+        context.getStateMachine()
+                .getExtendedState()
+                .getVariables()
+                .put("isFraud", analysis);
     }
 
     @OnEventNotAccepted
-    public void eventNotAccepted(StateContext context) {
-        String messageError = String.format("Event (%s) not accepted for current state (%s)", context.getEvent(), context.getStateMachine().getState().getId());
-        context.getExtendedState().getVariables().put("eventErrorMessage", messageError);
+    public void eventNotAccepted(StateContext<PaymentStates, PaymentEvents> context) {
+        String messageError = String.format("Event (%s) not accepted for current state (%s)",
+                context.getEvent(),
+                context.getStateMachine().getState().getId().name());
+        context.getExtendedState()
+                .getVariables()
+                .put("eventErrorMessage", messageError);
+        //messagingService.send(routingKeyError, messageError);
     }
 }
