@@ -3,12 +3,9 @@ package com.statemachine.incubator.example.controller;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.statemachine.incubator.example.entity.Payment;
 import com.statemachine.incubator.example.entity.PaymentStates;
-import com.statemachine.incubator.example.entity.TrafficLight;
-import com.statemachine.incubator.example.entity.TrafficLight.TrafficStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 

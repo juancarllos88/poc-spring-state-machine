@@ -1,8 +1,6 @@
 package com.statemachine.incubator.example.service;
 
-import com.statemachine.incubator.example.controller.PaymentController;
 import com.statemachine.incubator.example.entity.Payment;
-import com.statemachine.incubator.example.entity.TrafficLight;
 import com.statemachine.incubator.example.repository.PaymentRepository;
 import com.statemachine.incubator.example.state_machine.PaymentEvents;
 import com.statemachine.incubator.example.state_machine.PaymentMachineFactory;
@@ -47,13 +45,14 @@ public class PaymentService {
                 .orElseThrow(()-> new IllegalArgumentException("Payment not found -> " + paymentId));
 
         var stateMachine = factory.createStateMachineBasedOn(payment);
+        log.info(String.format("Trigger event %s", command));
         stateMachine.sendEvent(command);
 
         var eventErrorMessage = stateMachine.getExtendedState().get("eventErrorMessage", String.class);
         Assert.state(eventErrorMessage == null, eventErrorMessage);
 
         var paymentFromStateMachine = stateMachine.getExtendedState().get("payment", Payment.class);
-        log.info(String.format("Updating payment with state %s", paymentFromStateMachine.getState()));
+        log.info(String.format("Updating payment with state %s", paymentFromStateMachine.getState().name()));
         return repository.save(paymentFromStateMachine);
     }
 }
