@@ -2,12 +2,8 @@ package com.statemachine.incubator.example.state_machine;
 
 import com.statemachine.incubator.example.entity.Payment;
 import com.statemachine.incubator.example.entity.PaymentStates;
-import com.statemachine.incubator.example.entity.TrafficLight;
-import com.statemachine.incubator.example.entity.TrafficLight.TrafficStatus;
-import com.statemachine.incubator.example.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultExtendedState;
 import org.springframework.statemachine.support.DefaultStateMachineContext;

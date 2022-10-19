@@ -1,10 +1,13 @@
 package com.statemachine.incubator.example.service;
 
+import com.statemachine.incubator.example.controller.PaymentController;
 import com.statemachine.incubator.example.entity.Payment;
 import com.statemachine.incubator.example.entity.TrafficLight;
 import com.statemachine.incubator.example.repository.PaymentRepository;
 import com.statemachine.incubator.example.state_machine.PaymentEvents;
 import com.statemachine.incubator.example.state_machine.PaymentMachineFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,8 @@ import java.util.Optional;
 
 @Service
 public class PaymentService {
+
+    private final static Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final PaymentRepository repository;
     private final PaymentMachineFactory factory;
@@ -31,13 +36,13 @@ public class PaymentService {
     @Transactional
     public Payment create(Payment payment) {
         var stateMachine = factory.createStateMachineWith(payment);
-        Payment newPayment = stateMachine.getExtendedState().get("payment", Payment.class);
-
-        return repository.save(newPayment);
+        Payment paymentFromStateMachine = stateMachine.getExtendedState().get("payment", Payment.class);
+        log.info(String.format("Persist payment with state %s", paymentFromStateMachine.getState()));
+        return repository.save(paymentFromStateMachine);
     }
 
     @Transactional
-    public Payment execute(Long paymentId, PaymentEvents command) {
+    public Payment updateState(Long paymentId, PaymentEvents command) {
         var payment = repository.findById(paymentId)
                 .orElseThrow(()-> new IllegalArgumentException("Payment not found -> " + paymentId));
 
@@ -47,6 +52,8 @@ public class PaymentService {
         var eventErrorMessage = stateMachine.getExtendedState().get("eventErrorMessage", String.class);
         Assert.state(eventErrorMessage == null, eventErrorMessage);
 
-        return stateMachine.getExtendedState().get("payment", Payment.class);
+        var paymentFromStateMachine = stateMachine.getExtendedState().get("payment", Payment.class);
+        log.info(String.format("Updating payment with state %s", paymentFromStateMachine.getState()));
+        return repository.save(paymentFromStateMachine);
     }
 }

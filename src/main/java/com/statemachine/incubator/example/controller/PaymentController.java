@@ -29,8 +29,8 @@ public class PaymentController {
     }
 
     @PatchMapping("/{paymentId}/statuses")
-    public ResponseEntity<OutputPaymentDto> executeCommand(@PathVariable Long paymentId, @RequestBody InputCommandDto dto) {
-        var payment = paymentService.execute(paymentId, dto.command());
+    public ResponseEntity<OutputPaymentDto> changeState(@PathVariable Long paymentId, @RequestBody InputCommandDto dto) {
+        var payment = paymentService.updateState(paymentId, dto.command());
         return ResponseEntity.ok(OutputPaymentDto.from(payment));
     }
 

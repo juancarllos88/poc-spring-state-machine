@@ -79,7 +79,6 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
     Action<PaymentStates, PaymentEvents> initializePayment() {
         return ctx -> {
             LOG.info("=================== > Initializing Payment < ===============================");
-
             //ctx.getStateMachine().sendEvent(START_PAYMENT);
         };
     }
