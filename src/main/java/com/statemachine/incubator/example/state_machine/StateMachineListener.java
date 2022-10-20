@@ -2,13 +2,15 @@ package com.statemachine.incubator.example.state_machine;
 
 import com.statemachine.incubator.example.entity.Payment;
 import com.statemachine.incubator.example.entity.PaymentStates;
+import com.statemachine.incubator.example.publisher.PaymentPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.annotation.*;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
-import org.springframework.statemachine.state.State;
 
 import java.util.Objects;
 import java.util.Random;
@@ -18,9 +20,15 @@ public class StateMachineListener extends StateMachineListenerAdapter<PaymentSta
 
     private static final Logger log = LoggerFactory.getLogger(StateMachineListener.class);
 
+    @Value("${payments.broker.routing-key.error}")
+    private String errorRoutingKey;
+
+    @Autowired
+    private PaymentPublisher publisher;
+
     @OnTransitionEnd(target = {"IN_ANALYSIS","REJECTED_BY_FRAUD","AUTHORIZED", "CHECKING_AUTHORIZATION","NOT_AUTHORIZED"})
     public void syncStateMachineWithEntity(StateContext<PaymentStates, PaymentEvents> context) {
-        log.info(String.format("-> State final from payment %s", context.getStateMachine().getState().getId()));
+        log.info(String.format("State final from payment %s", context.getStateMachine().getState().getId()));
         var paymentFromStateMachine = context.getExtendedState().get("payment", Payment.class);
 
         if (Objects.nonNull(paymentFromStateMachine)) {
@@ -34,7 +42,7 @@ public class StateMachineListener extends StateMachineListenerAdapter<PaymentSta
     }
     @OnStateChanged()
     public void stateChanged(StateMachine<PaymentStates, PaymentEvents> stateMachine) {
-        log.info(String.format("-> State Changed %s ", stateMachine.getState().getId().name()));
+        log.info(String.format("State Changed %s ", stateMachine.getState().getId().name()));
     }
 
     @OnTransitionStart(target = {"IN_ANALYSIS"})
@@ -56,6 +64,7 @@ public class StateMachineListener extends StateMachineListenerAdapter<PaymentSta
         context.getExtendedState()
                 .getVariables()
                 .put("eventErrorMessage", messageError);
+        publisher.send(messageError, errorRoutingKey);
     }
 
 }

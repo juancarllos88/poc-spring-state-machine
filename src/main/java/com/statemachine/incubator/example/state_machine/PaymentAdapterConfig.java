@@ -1,8 +1,12 @@
 package com.statemachine.incubator.example.state_machine;
 
+import com.statemachine.incubator.example.entity.Payment;
 import com.statemachine.incubator.example.entity.PaymentStates;
+import com.statemachine.incubator.example.publisher.PaymentPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.action.Action;
@@ -25,6 +29,15 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
 
     private static final Logger log = LoggerFactory.getLogger(PaymentAdapterConfig.class);
 
+    @Value("${payments.broker.routing-key.email}")
+    private String emailRoutingKey;
+
+    @Value("${payments.broker.routing-key.fraud}")
+    private String fraudRoutingKey;
+
+    @Autowired
+    private PaymentPublisher publisher;
+
     @Override
     public void configure(StateMachineConfigurationConfigurer<PaymentStates, PaymentEvents> config) throws Exception {
         config.withConfiguration()
@@ -39,7 +52,7 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
                 .stateDo(PAYMENT_STARTED, initializePayment())
                 .stateDo(AUTHORIZED, sendStatusByEmail())
                 .stateDo(NOT_AUTHORIZED, sendStatusByEmail())
-                .stateDo(REJECTED_BY_FRAUD, sendStatusByEmail())
+                .stateDo(REJECTED_BY_FRAUD, sendStatusByEmailFraud())
                 .choice(IN_ANALYSIS)
                 .end(REJECTED_BY_FRAUD)
                 .end(AUTHORIZED)
@@ -86,9 +99,21 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
 
     @Bean
     Action<PaymentStates, PaymentEvents> sendStatusByEmail() {
+        return getPaymentStatesPaymentEventsAction(emailRoutingKey);
+    }
+
+    private Action<PaymentStates, PaymentEvents> getPaymentStatesPaymentEventsAction(String routingKey) {
         return ctx -> {
             log.info("Sending email: actual state: " + ctx.getStateMachine().getState().getId().name());
+            var payment = ctx.getExtendedState().get("payment", Payment.class);
+            String msg = String.format("Payment id %s with state %s", payment.getId(), payment.getState().name());
+            publisher.send(msg, routingKey);
         };
+    }
+
+    @Bean
+    Action<PaymentStates, PaymentEvents> sendStatusByEmailFraud() {
+        return getPaymentStatesPaymentEventsAction(fraudRoutingKey);
     }
 
 }

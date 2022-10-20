@@ -35,7 +35,6 @@ public class PaymentService {
     public Payment create(Payment payment) {
         var stateMachine = factory.createStateMachineWith(payment);
         Payment paymentFromStateMachine = stateMachine.getExtendedState().get("payment", Payment.class);
-        log.info(String.format("Persist payment with state %s", paymentFromStateMachine.getState()));
         return repository.save(paymentFromStateMachine);
     }
 
@@ -52,7 +51,6 @@ public class PaymentService {
         Assert.state(eventErrorMessage == null, eventErrorMessage);
 
         var paymentFromStateMachine = stateMachine.getExtendedState().get("payment", Payment.class);
-        log.info(String.format("Updating payment with state %s", paymentFromStateMachine.getState().name()));
         return repository.save(paymentFromStateMachine);
     }
 }

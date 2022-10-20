@@ -15,23 +15,24 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-#  rabbitmq:
-#    host: 172.240.0.3
-#    port: 5672
-#    username: guest
-#    password: guest
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: payments
+    password: payments
 server:
   servlet:
     context-path: /incubator-state-machine
-queue:
-  name:
-    email: email
-    fraud: fraud
-    error: error
-rabbit:
-  exchange: state-machine
-  routing:
-    key:
+
+# rabbitmq's data
+payments:
+  broker:
+    exchange: state-machine
+    queue:
+      email: email
+      fraud: fraud
+      error: error
+    routing-key:
       email: state_machine_routing_key_email
       fraud: state_machine_routing_key_fraud
       error: state_machine_routing_key_error
