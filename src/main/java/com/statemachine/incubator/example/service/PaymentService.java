@@ -40,7 +40,7 @@ public class PaymentService {
 
     @Transactional
     public Payment updateState(Long paymentId, PaymentEvents command) {
-        var payment = repository.findById(paymentId)
+        var payment = findBy(paymentId)
                 .orElseThrow(()-> new IllegalArgumentException("Payment not found -> " + paymentId));
 
         var stateMachine = factory.createStateMachineBasedOn(payment);

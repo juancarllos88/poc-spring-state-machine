@@ -26,9 +26,8 @@ public class StateMachineListener {
     @Autowired
     private PaymentPublisher publisher;
 
-    @OnTransitionEnd(target = {"IN_ANALYSIS","REJECTED_BY_FRAUD","AUTHORIZED", "CHECKING_AUTHORIZATION","NOT_AUTHORIZED"})
+    @OnTransitionEnd(source = {"PAYMENT_STARTED", "IN_ANALYSIS", "IN_AUTHORIZATION", "AUTHORIZED", "NOT_AUTHORIZED", "REJECTED_BY_FRAUD"})
     public void syncStateMachineWithEntity(StateContext<PaymentStates, PaymentEvents> context) {
-        log.info(String.format("State final from payment %s", context.getStateMachine().getState().getId()));
         var paymentFromStateMachine = context.getExtendedState().get("payment", Payment.class);
 
         if (Objects.nonNull(paymentFromStateMachine)) {
@@ -40,19 +39,15 @@ public class StateMachineListener {
                     .put("payment", paymentFromStateMachine);
         }
     }
-    @OnStateChanged()
-    public void stateChanged(StateMachine<PaymentStates, PaymentEvents> stateMachine) {
-        log.info(String.format("StateMachine changed %s ", stateMachine.getState().getId().name()));
-    }
+
 
     @OnTransitionStart(target = {"IN_ANALYSIS"})
     public void analyzingPayment(StateContext<PaymentStates, PaymentEvents> context) {
         Boolean analysis = new Random().nextBoolean();
-        log.info(String.format("Analyze payment %s. Is Fraud? %s", context.getStateMachine().getState().getId(), analysis));
         context.getStateMachine()
                 .getExtendedState()
                 .getVariables()
-                .put("isFraud", true);
+                .put("isFraud", analysis);
     }
 
     @OnEventNotAccepted
