@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Random;
 
 @WithStateMachine(id = "paymentListener")
-public class StateMachineListener extends StateMachineListenerAdapter<PaymentStates, PaymentEvents> {
+public class StateMachineListener {
 
     private static final Logger log = LoggerFactory.getLogger(StateMachineListener.class);
 
@@ -42,17 +42,17 @@ public class StateMachineListener extends StateMachineListenerAdapter<PaymentSta
     }
     @OnStateChanged()
     public void stateChanged(StateMachine<PaymentStates, PaymentEvents> stateMachine) {
-        log.info(String.format("State Changed %s ", stateMachine.getState().getId().name()));
+        log.info(String.format("StateMachine changed %s ", stateMachine.getState().getId().name()));
     }
 
     @OnTransitionStart(target = {"IN_ANALYSIS"})
     public void analyzingPayment(StateContext<PaymentStates, PaymentEvents> context) {
         Boolean analysis = new Random().nextBoolean();
-        log.info(String.format("Starting analyze of fraud payment with status %s. Fraud: %s", context.getStateMachine().getState().getId(), analysis));
+        log.info(String.format("Analyze payment %s. Is Fraud? %s", context.getStateMachine().getState().getId(), analysis));
         context.getStateMachine()
                 .getExtendedState()
                 .getVariables()
-                .put("isFraud", analysis);
+                .put("isFraud", true);
     }
 
     @OnEventNotAccepted

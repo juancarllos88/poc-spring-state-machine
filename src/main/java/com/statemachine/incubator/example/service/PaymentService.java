@@ -44,7 +44,6 @@ public class PaymentService {
                 .orElseThrow(()-> new IllegalArgumentException("Payment not found -> " + paymentId));
 
         var stateMachine = factory.createStateMachineBasedOn(payment);
-        log.info(String.format("Trigger event %s", command));
         stateMachine.sendEvent(command);
 
         var eventErrorMessage = stateMachine.getExtendedState().get("eventErrorMessage", String.class);

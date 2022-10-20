@@ -12,6 +12,7 @@ import java.time.Instant;
 import static javax.persistence.EnumType.STRING;
 
 @Entity
+@Table(name = "payments")
 @DynamicUpdate
 public class Payment {
 

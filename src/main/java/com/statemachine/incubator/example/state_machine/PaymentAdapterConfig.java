@@ -103,10 +103,10 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
 
     private Action<PaymentStates, PaymentEvents> getPaymentStatesPaymentEventsAction(String routingKey) {
         return ctx -> {
-            var payment = ctx.getExtendedState().get("payment", Payment.class);
+//            var payment = ctx.getExtendedState().get("payment", Payment.class);
+//            String msg = String.format("Payment id %s with state %s", payment.getId(), ctx.getStateMachine().getState().getId().name());
             log.info("Sending email: actual state: " + ctx.getStateMachine().getState().getId().name());
-            String msg = String.format("Payment id %s with state %s", payment.getId(), ctx.getStateMachine().getState().getId().name());
-            publisher.send(msg, routingKey);
+            publisher.send(ctx.getStateMachine().getState().getId().name(), routingKey);
         };
     }
 
