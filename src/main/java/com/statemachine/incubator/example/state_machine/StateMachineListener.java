@@ -60,7 +60,6 @@ public class StateMachineListener extends StateMachineListenerAdapter<PaymentSta
         String messageError = String.format("Event (%s) not accepted for current state (%s)",
                 context.getEvent(),
                 context.getStateMachine().getState().getId().name());
-        log.info(messageError);
         context.getExtendedState()
                 .getVariables()
                 .put("eventErrorMessage", messageError);

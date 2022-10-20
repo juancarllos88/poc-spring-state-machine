@@ -84,7 +84,6 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
                     .getExtendedState()
                     .getVariables()
                     .get("isFraud");
-            log.info("-> Checking result from analyze from Payment");
             return Objects.isNull(isFraud) || isFraud;
         };
     }
@@ -104,9 +103,9 @@ public class PaymentAdapterConfig extends EnumStateMachineConfigurerAdapter<Paym
 
     private Action<PaymentStates, PaymentEvents> getPaymentStatesPaymentEventsAction(String routingKey) {
         return ctx -> {
-            log.info("Sending email: actual state: " + ctx.getStateMachine().getState().getId().name());
             var payment = ctx.getExtendedState().get("payment", Payment.class);
-            String msg = String.format("Payment id %s with state %s", payment.getId(), payment.getState().name());
+            log.info("Sending email: actual state: " + ctx.getStateMachine().getState().getId().name());
+            String msg = String.format("Payment id %s with state %s", payment.getId(), ctx.getStateMachine().getState().getId().name());
             publisher.send(msg, routingKey);
         };
     }
