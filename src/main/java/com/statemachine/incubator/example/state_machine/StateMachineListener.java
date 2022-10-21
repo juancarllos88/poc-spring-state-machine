@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.annotation.*;
-import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 
 import java.util.Objects;
 import java.util.Random;
@@ -23,6 +21,11 @@ public class StateMachineListener {
     @Value("${payments.broker.routing-key.error}")
     private String errorRoutingKey;
 
+    @Value("${payments.broker.routing-key.email}")
+    private String emailRoutingKey;
+
+    @Value("${payments.broker.routing-key.fraud}")
+    private String fraudRoutingKey;
     @Autowired
     private PaymentPublisher publisher;
 
@@ -38,6 +41,7 @@ public class StateMachineListener {
                     .getVariables()
                     .put("payment", paymentFromStateMachine);
         }
+        log.info("OnTransitionEnd state {}",context.getStateMachine().getState().getId().name());
     }
 
 
@@ -48,6 +52,18 @@ public class StateMachineListener {
                 .getExtendedState()
                 .getVariables()
                 .put("isFraud", analysis);
+    }
+
+    @OnStateChanged(target = {"REJECTED_BY_FRAUD"})
+    public void sendEmailByFraud(StateContext<PaymentStates, PaymentEvents> context) {
+        log.info("Sending email: actual state: {}", context.getTarget().getId().name());
+        publisher.send(context.getTarget().getId().name(), fraudRoutingKey);
+    }
+
+    @OnTransitionStart(target = {"AUTHORIZED", "NOT_AUTHORIZED"})
+    public void sendEmailByAuthorization(StateContext<PaymentStates, PaymentEvents> context) {
+        log.info("Sending email: actual state: {}", context.getTarget().getId().name());
+        publisher.send(context.getTarget().getId().name(), emailRoutingKey);
     }
 
     @OnEventNotAccepted
